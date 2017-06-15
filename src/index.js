@@ -4,18 +4,24 @@ import crypto from 'crypto';
 function TCPTransportServer (config) {
   let _TCPTransportServer = function (fn) {
     this.server = net.createServer(function (c) {
+      var chunk = "";
       c.on('data', function (_response) {
-        let response = JSON.parse(_response);
-        let { id, name, data } = response;
+        // To make sure we recieve all the data being sent from the client 
+        chunk += _response.toString(); // Add string on the end of the variable 'chunk'
+        var d_index = chunk.indexOf('}'); // Find the delimiter
+        if(d_index > -1){
+          let response = JSON.parse(chunk);
+          let { id, name, data } = response;
 
-        fn(name, data, function (error, d) {
-          let response = JSON.stringify({
-            data: d,
-            id,
-            error
+          fn(name, data, function (error, d) {
+            let response = JSON.stringify({
+              data: d,
+              id,
+              error
+            });
+            c.write(response);
           });
-          c.write(response);
-        });
+        }
       });
     });
   };
